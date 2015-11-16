@@ -3,6 +3,7 @@
     "description": "CoCo Framework",
     "keywords": ["coco", "framework", "coco-framework"],
     "type": "library",
+    "license": "MIT",
     "authors": [
 		{
 			"name": "xiaozuzhi",
