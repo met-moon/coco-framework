@@ -78,21 +78,5 @@ class ClassLoader{
             }
         }
         return false;
-                    $relativeClass = substr($class, $len);
-                    $classFile = self::$basePath.'/'.$subPath.'/'.str_replace('\\', '/', $relativeClass).self::$fileExt;
-                    if(file_exists($classFile)){
-                        require_once $classFile;
-                        return;
-                    }
-                }
-            }else{
-                $relativeClass = substr($class, $len);
-                $classFile = self::$basePath.'/'.$path.'/'.str_replace('\\', '/', $relativeClass).self::$fileExt;
-                if(file_exists($classFile)){
-                    require_once $classFile;
-                    return;
-                }
-            }
-        }
     }
 }

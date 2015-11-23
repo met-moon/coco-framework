@@ -3,8 +3,6 @@ CoCo Framework. This is a lightweight PHP framework. Welcome to use it!
 
 ####目录结构
 
-<<<<<<< HEAD
-=======
 	|--tiaoshi/
 		|--1.0/
 		|	|--protected/		#项目文件目录
@@ -22,7 +20,6 @@ CoCo Framework. This is a lightweight PHP framework. Welcome to use it!
 			|--framework		#yii 框架目录
 
 	./
->>>>>>> 999588a79c9f7f34e39ccf105ad972739c1b37ac
     └── coco
         ├── base
         │   ├── Controller.php
@@ -35,3 +32,4 @@ CoCo Framework. This is a lightweight PHP framework. Welcome to use it!
         ├── README.md
         └── web
             └── Application.php
+version v0.2
