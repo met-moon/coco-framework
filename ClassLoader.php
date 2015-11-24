@@ -5,7 +5,8 @@
  * @author T
  * @date 2015-09-21 12:36
  */
-class ClassLoader{
+class ClassLoader
+{
 
     /**
      * base directory
@@ -30,7 +31,8 @@ class ClassLoader{
      * @param $prefix
      * @param $path
      */
-    public static function addPrefix($prefix, $path){
+    public static function addPrefix($prefix, $path)
+    {
         self::$prefixMap["$prefix"] = $path;
     }
 
@@ -39,21 +41,21 @@ class ClassLoader{
      * @param string $class
      * @return bool
      */
-    public static function autoload($class){
+    public static function autoload($class)
+    {
         foreach (self::$prefixMap as $prefix => $path) {
             $length = strlen($prefix);
-            if(strncmp($prefix, $class, $length) !== 0){
+            if (strncmp($prefix, $class, $length) !== 0) {
                 continue;
             }
-            if(is_array($path) && !empty($path)){
+            if (is_array($path) && !empty($path)) {
                 foreach ($path as $subPath) {
                     self::_requireClassFile($class, $subPath, $length);
                 }
-            }else{
+            } else {
                 self::_requireClassFile($class, $path, $length);
             }
         }
-        return false;
     }
 
     /**
@@ -63,16 +65,17 @@ class ClassLoader{
      * @param int $length
      * @return bool
      */
-    private static function _requireClassFile($class, $path, $length){
+    private static function _requireClassFile($class, $path, $length)
+    {
         $relativeClass = substr($class, $length);
         $CoCoPath = dirname(__DIR__);
-        $classFile = $CoCoPath.'/'.$path.'/'.str_replace('\\', '/', $relativeClass).self::$fileExt;
-        if(file_exists($classFile)){
+        $classFile = $CoCoPath . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . self::$fileExt;
+        if (file_exists($classFile)) {
             require_once $classFile;
             return true;
-        }else{
-            $classFile = self::$basePath.'/'.$path.'/'.str_replace('\\', '/', $relativeClass).self::$fileExt;
-            if(file_exists($classFile)){
+        } else {
+            $classFile = self::$basePath . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . self::$fileExt;
+            if (file_exists($classFile)) {
                 require_once $classFile;
                 return true;
             }

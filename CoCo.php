@@ -29,7 +29,7 @@ class CoCo
 
     public static function getVersion()
     {
-        return 'v0.2';
+        return 'v0.1-dev';
     }
 }
 
