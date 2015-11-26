@@ -58,12 +58,25 @@ class View extends \coco\base\View
                         $viewData[$k] = $v;
                     }
                 }
-                ob_start();
-                include $viewFile;
-                $content = ob_get_contents();
-                ob_end_clean();
-                $viewData['content'] = $content;
-                $this->renderPartial('/layouts/' . $this->layout, $viewData);
+                if(!file_exists($viewFile)){
+                    try{
+                        throw new \Exception('<h1 style="color: red;">View Not Found</h1><h2>View ' . $viewFile . ' not exists!</h2>' . PHP_EOL);
+                    }catch (\Exception $e) {
+                        echo '<pre>';
+                        echo $e->getMessage();
+                        foreach ($e->getTrace() as $f) {
+                            echo $f['file'] . ' in line ' . $f['line'] . ' -> ' . $f['class'] . '::' . $f['function'] . PHP_EOL;
+                        }
+                        echo '<hr>' . date('Y-m-d H:i:s') . '  CoCo Framework ' . CoCo::getVersion() . ' </pre>';
+                    }
+                }else{
+                    ob_start();
+                    include $viewFile;
+                    $content = ob_get_contents();
+                    ob_end_clean();
+                    $viewData['content'] = $content;
+                    $this->renderPartial('/layouts/' . $this->layout, $viewData);
+                }
             } else {
                 $this->renderPartial($view, $data);
             }
@@ -112,6 +125,37 @@ class View extends \coco\base\View
                 $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . CoCo::$app->module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->controller) . DIRECTORY_SEPARATOR . strtolower($view) . '.' . $this->defaultExtension;
             }
         }
-        return realpath($view);
+        return $this->_normalizePath($view);
+    }
+
+    private function _normalizePath($path)
+    {
+        $parts = [];// Array to build a new path from the good parts
+        $path = str_replace('\\', '/', $path);// Replace backslashes with forwardslashes
+        $path = preg_replace('/\/+/', '/', $path);// Combine multiple slashes into a single slash
+        $segments = explode('/', $path);// Collect path segments
+        foreach($segments as $segment)
+        {
+            if($segment != '.')
+            {
+                $test = array_pop($parts);
+                if(is_null($test))
+                    $parts[] = $segment;
+                else if($segment == '..')
+                {
+                    if($test == '..')
+                        $parts[] = $test;
+
+                    if($test == '..' || $test == '')
+                        $parts[] = $segment;
+                }
+                else
+                {
+                    $parts[] = $test;
+                    $parts[] = $segment;
+                }
+            }
+        }
+        return implode(DIRECTORY_SEPARATOR, $parts);
     }
 }

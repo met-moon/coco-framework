@@ -119,4 +119,8 @@ class Application extends \coco\base\Application
             echo '<hr>'.date('Y-m-d H:i:s').'  CoCo Framework '.CoCo::getVersion().' </pre>';
         }
     }
+
+    public function end(){
+        exit();
+    }
 }
