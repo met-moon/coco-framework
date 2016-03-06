@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Web Controller
  * User: ttt
  * Date: 2015/11/21
  * Time: 23:17
@@ -228,14 +228,5 @@ class Controller extends \coco\base\Controller
         }else{
             return null;
         }
-    }
-
-    /**
-     * echo json_encode data
-     * @param array $data
-     */
-    public function echoJson($data){
-        echo json_encode($data);
-        CoCo::$app->end();
     }
 }

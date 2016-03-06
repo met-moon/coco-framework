@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Web View
  * User: ttt
  * Date: 2015/11/23
  * Time: 23:02
@@ -9,6 +9,7 @@
 namespace coco\web;
 
 use CoCo;
+use coco\Exception;
 
 class View extends \coco\base\View
 {
@@ -36,7 +37,7 @@ class View extends \coco\base\View
      * page file default extension
      * @var string
      */
-    public $defaultExtension = 'php';
+    public $defaultExtension = 'phtml';
 
     /**
      * render a page with layout
@@ -60,14 +61,10 @@ class View extends \coco\base\View
                 }
                 if(!file_exists($viewFile)){
                     try{
-                        throw new \Exception('<h1 style="color: red;">View Not Found</h1><h2>View ' . $viewFile . ' not exists!</h2>' . PHP_EOL);
-                    }catch (\Exception $e) {
-                        echo '<pre>';
-                        echo $e->getMessage();
-                        foreach ($e->getTrace() as $f) {
-                            echo $f['file'] . ' in line ' . $f['line'] . ' -> ' . $f['class'] . '::' . $f['function'] . PHP_EOL;
-                        }
-                        echo '<hr>' . date('Y-m-d H:i:s') . '  CoCo Framework ' . CoCo::getVersion() . ' </pre>';
+                        header('HTTP/1.1 500 Internal Server Error');
+                        throw new Exception('View Not Found', 'View ' . $viewFile . ' not exists!' . PHP_EOL);
+                    }catch (Exception $e) {
+                        Debug::catchException($e);
                     }
                 }else{
                     ob_start();
@@ -96,16 +93,11 @@ class View extends \coco\base\View
             if (file_exists($viewFile)) {
                 include $viewFile;
             } else {
-                throw new \Exception('<h1 style="color: red;">View Not Found</h1><h2>View ' . $viewFile . ' not exists!</h2>' . PHP_EOL);
+                header('HTTP/1.1 500 Internal Server Error');
+                throw new Exception('View Not Found', 'View ' . $viewFile . ' not exists!' . PHP_EOL);
             }
-        } catch (\Exception $e) {
-            echo '<pre>';
-            echo $e->getMessage();
-            foreach ($e->getTrace() as $f) {
-                echo $f['file'] . ' in line ' . $f['line'] . ' -> ' . $f['class'] . '::' . $f['function'] . PHP_EOL;
-            }
-
-            echo '<hr>' . date('Y-m-d H:i:s') . '  CoCo Framework ' . CoCo::getVersion() . ' </pre>';
+        } catch (Exception $e) {
+            Debug::catchException($e);
         }
     }
 
