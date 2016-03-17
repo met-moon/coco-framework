@@ -14,12 +14,13 @@ use coco\Exception;
  */
 class Application extends \coco\base\Application
 {
+    public $config;
     public function __construct($config)
     {
         if (!is_null($config)) {
-            CoCo::$app = $this;
-            CoCo::$app->config = $config;
+            $this->config = $config;
         }
+        CoCo::$app = $this;
     }
 
     /**
@@ -36,6 +37,7 @@ class Application extends \coco\base\Application
     public function run()
     {
         try{
+            $this->startSession();
             ClassLoader::addPrefix('app\\', 'app');
             $this->checkConfig();
             $this->route();
@@ -46,10 +48,22 @@ class Application extends \coco\base\Application
     }
 
     /**
+     * start session
+     */
+    protected function startSession(){
+        if(isset(CoCo::$app->config['session']['start']) && CoCo::$app->config['session']['start'] === false){
+            return;
+        }
+        if(!empty(CoCo::$app->config['session']['name'])){
+            session_name(CoCo::$app->config['session']['name']);
+        }
+        session_start();
+    }
+
+    /**
      * Check the Application Configuration
      */
     public function checkConfig(){
-
         if(!empty(CoCo::$app->config['appPath']) && is_dir(CoCo::$app->config['appPath'])){
             CoCo::$app->appPath = CoCo::$app->config['appPath'];
             ClassLoader::$basePath = dirname(CoCo::$app->config['appPath']);
@@ -71,7 +85,24 @@ class Application extends \coco\base\Application
         CoCo::$app->defaultController = ucfirst($defaultController);
         CoCo::$app->defaultAction = ucfirst($defaultAction);
 
+        // parse url
         $uriArr = parse_url($_SERVER['REQUEST_URI']);
+        $scriptPathInfo = pathinfo($_SERVER['SCRIPT_NAME']);
+        if($scriptPathInfo['dirname'] !== '/'){
+            $uriArr['path'] = substr($uriArr['path'], strlen($scriptPathInfo['dirname']));
+            if($uriArr['path'] == '/'.$scriptPathInfo['basename']){
+                $uriArr['path'] = substr($uriArr['path'], strlen('/'.$scriptPathInfo['basename']));
+            }else{
+                if(strpos($uriArr['path'], '/'.$scriptPathInfo['basename']) === 0){
+                    $uriArr['path'] = substr($uriArr['path'], strlen('/'.$scriptPathInfo['basename']));
+                }
+            }
+        }else{
+            if(strpos($uriArr['path'], $_SERVER['SCRIPT_NAME']) === 0){
+                $uriArr['path'] = substr($uriArr['path'], strlen($_SERVER['SCRIPT_NAME']));
+            }
+        }
+
         if (!empty(CoCo::$app->config['url']['suffix'])) {
             // remove the url suffix
             if(strpos($uriArr['path'], CoCo::$app->config['url']['suffix']) !== false){
@@ -109,7 +140,7 @@ class Application extends \coco\base\Application
                     CoCo::$app->controller = ucfirst($uriPathArr[1]);
                     CoCo::$app->action = CoCo::$app->defaultAction;
                 }
-            }else if(count($uriPathArr) >= 3){  // request /module/controller/action
+            }else if(count($uriPathArr) == 3){  // request /module/controller/action
                 CoCo::$app->module = $uriPathArr[0];
                 CoCo::$app->controller = ucfirst($uriPathArr[1]);
                 CoCo::$app->action = ucfirst($uriPathArr[2]);

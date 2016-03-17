@@ -49,7 +49,7 @@ class View extends \coco\base\View
         if (empty($this->layout)) {
             $this->renderPartial($view, $data);
         } else {
-            $layoutFile = CoCo::$app->appPath . DIRECTORY_SEPARATOR . CoCo::$app->module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . strtolower($this->layout) . '.' . $this->defaultExtension;
+            $layoutFile = CoCo::$app->appPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . strtolower($this->layout) . '.' . $this->defaultExtension;
             if (file_exists($layoutFile)) {
                 $viewFile = $this->_parseView($view);
                 $viewData = [];
@@ -59,14 +59,14 @@ class View extends \coco\base\View
                         $viewData[$k] = $v;
                     }
                 }
-                if(!file_exists($viewFile)){
-                    try{
+                if (!file_exists($viewFile)) {
+                    try {
                         header('HTTP/1.1 500 Internal Server Error');
                         throw new Exception('View Not Found', 'View ' . $viewFile . ' not exists!' . PHP_EOL);
-                    }catch (Exception $e) {
+                    } catch (Exception $e) {
                         Debug::catchException($e);
                     }
-                }else{
+                } else {
                     ob_start();
                     include $viewFile;
                     $content = ob_get_contents();
@@ -106,43 +106,47 @@ class View extends \coco\base\View
      * @param $view
      * @return string
      */
-    private function _parseView($view)
+    protected function _parseView($view)
     {
         if (is_null($view)) {
-            $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . CoCo::$app->module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->controller) . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->action) . '.' . $this->defaultExtension;
-        } else {
-            if (strpos($view, '/') !== false) {
-                $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . CoCo::$app->module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($view) . '.' . $this->defaultExtension;
+            if (CoCo::$app->module == CoCo::$app->defaultModule) {
+                $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->controller) . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->action) . '.' . $this->defaultExtension;
             } else {
-                $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . CoCo::$app->module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->controller) . DIRECTORY_SEPARATOR . strtolower($view) . '.' . $this->defaultExtension;
+                $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . CoCo::$app->module . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->controller) . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->action) . '.' . $this->defaultExtension;
+
+            }
+        } else {
+            if (strpos($view, '/') === 0) { // /index/index
+                $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . 'views' . strtolower($view) . '.' . $this->defaultExtension;
+            } else {
+                if (CoCo::$app->module == CoCo::$app->defaultModule) {
+                    $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->controller) . DIRECTORY_SEPARATOR . strtolower($view) . '.' . $this->defaultExtension;
+                } else {
+                    $view = CoCo::$app->appPath . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . CoCo::$app->module . DIRECTORY_SEPARATOR . strtolower(CoCo::$app->controller) . DIRECTORY_SEPARATOR . strtolower($view) . '.' . $this->defaultExtension;
+                }
             }
         }
         return $this->_normalizePath($view);
     }
 
-    private function _normalizePath($path)
+    protected function _normalizePath($path)
     {
         $parts = [];// Array to build a new path from the good parts
         $path = str_replace('\\', '/', $path);// Replace backslashes with forwardslashes
         $path = preg_replace('/\/+/', '/', $path);// Combine multiple slashes into a single slash
         $segments = explode('/', $path);// Collect path segments
-        foreach($segments as $segment)
-        {
-            if($segment != '.')
-            {
+        foreach ($segments as $segment) {
+            if ($segment != '.') {
                 $test = array_pop($parts);
-                if(is_null($test))
+                if (is_null($test))
                     $parts[] = $segment;
-                else if($segment == '..')
-                {
-                    if($test == '..')
+                else if ($segment == '..') {
+                    if ($test == '..')
                         $parts[] = $test;
 
-                    if($test == '..' || $test == '')
+                    if ($test == '..' || $test == '')
                         $parts[] = $segment;
-                }
-                else
-                {
+                } else {
                     $parts[] = $test;
                     $parts[] = $segment;
                 }

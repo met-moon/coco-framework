@@ -2,7 +2,7 @@
 
 namespace coco\base;
 /**
- * Created by PhpStorm.
+ * Base Application
  * User: ttt
  * Date: 2015/11/21
  * Time: 22:10

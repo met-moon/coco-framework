@@ -25,12 +25,9 @@ class Controller extends \coco\base\Controller
     /**
      * @var null
      */
-    private static $_view = null;
+    protected static $_view = null;
 
-    public function init()
-    {
-    }
-
+    public function init(){}
 
     /**
      * @return object View

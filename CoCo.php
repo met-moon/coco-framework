@@ -6,9 +6,6 @@ header('Content-type:text/html;charset=utf-8');
 // set timezone
 date_default_timezone_set('Asia/Shanghai');
 
-// session
-session_start();
-
 // some functions
 include_once 'functions.php';
 
@@ -34,7 +31,7 @@ class CoCo
 
     public static function getVersion()
     {
-        return 'v0.1-dev';
+        return 'v0.2-dev';
     }
 }
 
