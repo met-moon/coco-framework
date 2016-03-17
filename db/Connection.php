@@ -156,55 +156,6 @@ class Connection
     }
 
     /**
-     * 执行查询统计类型语句, 返回具体单个值, 常用于COUNT、AVG、MAX、MIN
-     * @param $sql
-     * @param array $params
-     * @return mixed 成功返回数据，失败返回FALSE
-     */
-    /*public function queryScalar($sql, $params = [])
-    {
-        $sql = $this->quoteSql($sql);
-        $this->lastSql = $sql;
-        $this->lastParams = $params;
-
-        $statement = $this->getReadPdo()->prepare($sql);
-        if ($statement && $statement->execute($params) && ($data = $statement->fetch(PDO::FETCH_NUM)) !== false) {
-            if (isset($data[0])) {
-                return $data[0];
-            }
-        }
-        return false;
-    }*/
-
-    /**
-     * execute a query SQL and fetch a row
-     * @param string $sql
-     * @param array $params
-     * @param int $fetchStyle
-     * @return array
-     */
-    /*public function queryRow($sql, $params = [], $fetchStyle = PDO::FETCH_ASSOC)
-    {
-        $sql = $this->quoteSql($sql);
-
-        $this->lastSql = $sql;
-        $this->lastParams = $params;
-
-        $statement = $this->getReadPdo()->prepare($sql);
-        if ($statement->execute($params)) {
-            $args = func_get_args();
-            $args = array_slice($args, 2);
-            $args[0] = $fetchStyle;
-            if ($fetchStyle == PDO::FETCH_FUNC) {
-                return call_user_func_array([$statement, 'fetch'], $args);
-            }
-            call_user_func_array([$statement, 'setFetchMode'], $args);
-            return $statement->fetch();
-        }
-        return false;
-    }*/
-
-    /**
      * execute a SQL (type: insert 、delete 、update )，return the number of affected rows
      * @param string $sql
      * @param array $bindParams
