@@ -19,8 +19,19 @@ class View extends \coco\base\View
      */
     public $title = '';
 
+    /**
+     * @var
+     */
     public $js;
 
+    /**
+     * @var
+     */
+    public $jsBottom;
+
+    /**
+     * @var
+     */
     public $css;
 
     public $content = '';
@@ -153,5 +164,38 @@ class View extends \coco\base\View
             }
         }
         return implode(DIRECTORY_SEPARATOR, $parts);
+    }
+
+    public function addCss($file, $path = '')
+    {
+        if (empty($path)) {
+            $path = pathinfo($_SERVER['SCRIPT_NAME']);
+            $realFile = rtrim($path['dirname'], '/'). '/css/' . $file . '.css';
+        }else{
+            $realFile = $path . $file . '.css';
+        }
+        $this->css .= '<link rel="stylesheet" href="' . $realFile . '">';
+    }
+
+    public function addJs($file, $path = '')
+    {
+        if (empty($path)) {
+            $path = pathinfo($_SERVER['SCRIPT_NAME']);
+            $realFile = rtrim($path['dirname'], '/') . '/js/' . $file . '.js';
+        }else{
+            $realFile = $path . $file . '.js';
+        }
+        $this->js .= '<script type="text/javascript" src="' . $realFile . '"></script>';
+    }
+
+    public function addJsBottom($file, $path = '')
+    {
+        if (empty($path)) {
+            $path = pathinfo($_SERVER['SCRIPT_NAME']);
+            $realFile = rtrim($path['dirname'], '/') . '/js/' . $file . '.js';
+        }else{
+            $realFile = $path . $file . '.js';
+        }
+        $this->jsBottom .= '<script type="text/javascript" src="' . $realFile . '"></script>';
     }
 }
