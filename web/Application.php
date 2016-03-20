@@ -88,19 +88,11 @@ class Application extends \coco\base\Application
         // parse url
         $uriArr = parse_url($_SERVER['REQUEST_URI']);
         $scriptPathInfo = pathinfo($_SERVER['SCRIPT_NAME']);
-        if($scriptPathInfo['dirname'] !== '/'){
+        $indexFile = '/'.$scriptPathInfo['basename'];
+        if(strpos($uriArr['path'], $indexFile) !== false){    //has index.php
+            $uriArr['path'] = substr($uriArr['path'], strlen($_SERVER['SCRIPT_NAME']));
+        }else{  //not has index.php
             $uriArr['path'] = substr($uriArr['path'], strlen($scriptPathInfo['dirname']));
-            if($uriArr['path'] == '/'.$scriptPathInfo['basename']){
-                $uriArr['path'] = substr($uriArr['path'], strlen('/'.$scriptPathInfo['basename']));
-            }else{
-                if(strpos($uriArr['path'], '/'.$scriptPathInfo['basename']) === 0){
-                    $uriArr['path'] = substr($uriArr['path'], strlen('/'.$scriptPathInfo['basename']));
-                }
-            }
-        }else{
-            if(strpos($uriArr['path'], $_SERVER['SCRIPT_NAME']) === 0){
-                $uriArr['path'] = substr($uriArr['path'], strlen($_SERVER['SCRIPT_NAME']));
-            }
         }
 
         if (!empty(CoCo::$app->config['url']['suffix'])) {
@@ -169,7 +161,7 @@ class Application extends \coco\base\Application
         if(CoCo::$app->module == CoCo::$app->defaultModule){
             $className = 'app\\' . 'controllers\\' . CoCo::$app->controller . 'Controller';
         }else{  // Joining together the controller class name
-            $className = 'app\\' . CoCo::$app->module . '\\controllers' . '\\' .CoCo::$app->controller . 'Controller';
+            $className = 'app\\'  . 'controllers\\'. CoCo::$app->module.'\\' .CoCo::$app->controller . 'Controller';
         }
 
         // check controller class exists
