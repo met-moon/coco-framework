@@ -36,7 +36,6 @@ class ClassLoader
         } else {
             $base_dir = rtrim($base_dir, '/\\') . DIRECTORY_SEPARATOR;
         }
-
         self::$prefixMap["$prefix"] = $base_dir;
     }
 
@@ -72,7 +71,6 @@ class ClassLoader
                 break;
             }
         }
-
         return $required;
     }
 

@@ -18,12 +18,11 @@ defined('COCO_ENV') or define('COCO_ENV', 'pro');
 // class autoload
 //include_once __DIR__ . '/Psr4ClassAutoLoader.php';
 //$loader = new Psr4ClassAutoLoader();
-//$loader->register();
 //$loader->addNamespace('coco\\', __DIR__);
+//$loader->register();
 
 require_once 'ClassLoader.php';
 ClassLoader::addPrefix('coco\\', __DIR__);
-ClassLoader::addPrefix('libraries', __DIR__.'/../../../libraries');
 
 spl_autoload_register('ClassLoader::autoload', true, true);
 
