@@ -196,6 +196,7 @@ class View extends \coco\base\View
     {
         if (empty($path)) {
             $realFile = $this->publicPath() . 'js/' . $file . '.js';
+
         }else{
             $realFile = $path . $file . '.js';
         }

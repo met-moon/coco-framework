@@ -45,7 +45,6 @@ class Application extends \coco\base\Application
         }catch (Exception $e){
             Debug::catchException($e);
         }
-        echo '<script>console.log("used-time: '.(microtime(true) - $GLOBALS['start_time']).'s")</script>';
     }
 
     /**

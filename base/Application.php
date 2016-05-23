@@ -8,9 +8,4 @@ namespace coco\base;
  * Time: 22:10
  */
 class Application
-{
-    public function __get($name)
-    {
-        var_dump($name);
-    }
 }
