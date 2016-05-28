@@ -27,8 +27,6 @@ class Controller extends \coco\base\Controller
      */
     protected $_view = null;
 
-    public function init(){}
-
     /**
      * @return object View
      */
@@ -45,6 +43,7 @@ class Controller extends \coco\base\Controller
      * @param null|string $view
      * @param array $data
      */
+
     public function render($view = null, $data = [])
     {
         $this->getView()->render($view, $data);
@@ -55,6 +54,7 @@ class Controller extends \coco\base\Controller
      * @param null|string $view
      * @param array $data
      */
+
     public function renderPartial($view = null, $data = [])
     {
         $this->getView()->renderPartial($view, $data);
