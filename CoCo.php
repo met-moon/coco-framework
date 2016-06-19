@@ -16,11 +16,6 @@ defined('COCO_DEBUG') or define('COCO_DEBUG', false);
 defined('COCO_ENV') or define('COCO_ENV', 'pro');
 
 // class autoload
-//include_once __DIR__ . '/Psr4ClassAutoLoader.php';
-//$loader = new Psr4ClassAutoLoader();
-//$loader->addNamespace('coco\\', __DIR__);
-//$loader->register();
-
 require_once 'ClassLoader.php';
 ClassLoader::addPrefix('coco\\', __DIR__);
 
@@ -28,11 +23,14 @@ spl_autoload_register('ClassLoader::autoload', true, true);
 
 class CoCo
 {
+    /**
+     * @var \coco\web\Application
+     */
     public static $app;
 
     public static function getVersion()
     {
-        return 'v0.2-dev';
+        return 'v0.3-dev';
     }
 }
 

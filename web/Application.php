@@ -14,7 +14,6 @@ use coco\Exception;
  */
 class Application extends \coco\base\Application
 {
-    public $config;
     public function __construct($config)
     {
         if (!is_null($config)) {
@@ -27,7 +26,8 @@ class Application extends \coco\base\Application
      * Bootstrap
      * @return $this
      */
-    public function bootstrap(){
+    public function bootstrap()
+    {
         return $this;
     }
 
@@ -36,13 +36,12 @@ class Application extends \coco\base\Application
      */
     public function run()
     {
-        try{
+        try {
             $this->startSession();
-            ClassLoader::addPrefix('app\\', CoCo::$app->config['appPath']);
-            $this->checkConfig();
-            $this->route();
+            $this->initConfig();
+            ClassLoader::addPrefix('app\\', $this->config['appPath']);
             $this->dispatch();
-        }catch (Exception $e){
+        } catch (Exception $e) {
             Debug::catchException($e);
         }
     }
@@ -50,95 +49,119 @@ class Application extends \coco\base\Application
     /**
      * start session
      */
-    protected function startSession(){
-        if(isset(CoCo::$app->config['session']['start']) && CoCo::$app->config['session']['start'] === false){
+    protected function startSession()
+    {
+        if (isset($this->config['session']['start']) && $this->config['session']['start'] === false) {
             return;
         }
-        if(!empty(CoCo::$app->config['session']['name'])){
-            session_name(CoCo::$app->config['session']['name']);
+        if (!empty($this->config['session']['name'])) {
+            session_name($this->config['session']['name']);
         }
         session_start();
     }
 
     /**
-     * Check the Application Configuration
+     * Initialize the Application Configuration
      */
-    public function checkConfig(){
-        if(!empty(CoCo::$app->config['appPath']) && is_dir(CoCo::$app->config['appPath'])){
-            CoCo::$app->appPath = CoCo::$app->config['appPath'];
-        }else{
-            header('HTTP/1.1 500 Internal Server Error');
-            throw new Exception('Configuration Error','Configuration "appPath" is required!');
+    public function initConfig()
+    {
+        if (!empty($this->config['appPath']) && is_dir($this->config['appPath'])) {
+            $this->appPath = realpath($this->config['appPath']);
+        } else {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error');
+            throw new Exception('Configuration Error', 'Configuration "appPath" is required!');
+        }
+
+        if (!empty($this->config['defaultModule'])) {
+            $this->defaultModule = $this->config['defaultModule'];
+        }
+
+        if (!empty($this->config['defaultController'])) {
+            $this->defaultController = $this->config['defaultController'];
+        }
+
+        if (!empty($this->config['defaultAction'])) {
+            $this->defaultAction = $this->config['defaultAction'];
+        }
+
+        if (!empty($this->config['controllerNamespace'])) {
+            $this->controllerNamespace = $this->config['controllerNamespace'];
+        }
+
+        if (!empty($this->config['timeZone'])) {
+            $this->timeZone = $this->config['timeZone'];
+        }
+
+        if (!empty($this->config['charset'])) {
+            $this->charset = $this->config['charset'];
+        }
+
+        if (isset($this->config['route']['type'])) {
+            $this->routeType = $this->config['route']['type'];
         }
     }
 
     /**
      * route
      */
-    public function route(){
-        $defaultModule = !empty(CoCo::$app->config['defaultModule']) ? CoCo::$app->config['defaultModule'] : 'index';
-        $defaultController = !empty(CoCo::$app->config['defaultController']) ? CoCo::$app->config['defaultController'] : 'index';
-        $defaultAction = !empty(CoCo::$app->config['defaultAction']) ? CoCo::$app->config['defaultAction'] : 'index';
-
-        CoCo::$app->defaultModule = $defaultModule;
-        CoCo::$app->defaultController = ucfirst($defaultController);
-        CoCo::$app->defaultAction = ucfirst($defaultAction);
-
+    public function parseRequest()
+    {
         // parse url
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $scriptPathInfo = pathinfo($_SERVER['SCRIPT_NAME']);
-        $indexFile = '/'.$scriptPathInfo['basename'];
-        if(strpos($uri, $indexFile) !== false){    //has index.php
+        $indexFile = '/' . $scriptPathInfo['basename'];
+        if (strpos($uri, $indexFile) !== false) {    //has index.php
             $uri = substr($uri, strlen($_SERVER['SCRIPT_NAME']));
-        }else{  //not has index.php
+        } else {  //not has index.php
             $uri = substr($uri, strlen($scriptPathInfo['dirname']));
         }
 
-        if (!empty(CoCo::$app->config['url']['suffix'])) {
+        if (!empty($this->config['route']['urlSuffix'])) {
             // remove the url suffix
-            if(strpos($uri, CoCo::$app->config['url']['suffix']) !== false){
-                $uri = strstr($uri, CoCo::$app->config['url']['suffix'], true);
+            if (strpos($uri, $this->config['route']['urlSuffix']) !== false) {
+                $uri = strstr($uri, $this->config['route']['urlSuffix'], true);
             }
         }
-        $uri = ltrim($uri, '/');
+
+        $uri = trim($uri, '/');
 
         // request /defaultModule/defaultController/defaultAction
-        if(empty($uri)){
-            CoCo::$app->module = CoCo::$app->defaultModule;
-            CoCo::$app->controller = CoCo::$app->defaultController;
-            CoCo::$app->action = CoCo::$app->defaultAction;
-        }else{
+        if (empty($uri)) {
+            $this->module = $this->defaultModule;
+            $this->controller = $this->defaultController;
+            $this->action = $this->defaultAction;
+        } else {
             $uriPathArr = explode('/', $uri);
-            if(count($uriPathArr) == 1){    // request /defaultModule/controller/defaultAction or /module/defaultController/defaultAction
-                CoCo::$app->module = CoCo::$app->defaultModule;
-                CoCo::$app->controller = ucfirst($uriPathArr[0]);
-                CoCo::$app->action = CoCo::$app->defaultAction;
+            if (count($uriPathArr) == 1) {    // request /defaultModule/controller/defaultAction or /module/defaultController/defaultAction
+                $this->module = $this->defaultModule;
+                $this->controller = $uriPathArr[0];
+                $this->action = $this->defaultAction;
 
-                $className = 'app\\' . 'controllers\\' . CoCo::$app->controller . 'Controller';
-                if(!class_exists($className)){
-                    CoCo::$app->module = $uriPathArr[0];
-                    CoCo::$app->controller = CoCo::$app->defaultController;
-                    CoCo::$app->action = CoCo::$app->defaultAction;
+                $className = $this->controllerNamespace . '\\' . ucfirst($this->controller) . 'Controller';
+                if (!class_exists($className)) {
+                    $this->module = $uriPathArr[0];
+                    $this->controller = $this->defaultController;
+                    $this->action = $this->defaultAction;
                 }
-            }else if(count($uriPathArr) == 2){    // request /defaultModule/controller/action or /module/controller/defaultAction
-                CoCo::$app->module = $defaultModule;
-                CoCo::$app->controller = ucfirst($uriPathArr[0]);
-                CoCo::$app->action = ucfirst($uriPathArr[1]);
+            } else if (count($uriPathArr) == 2) {    // request /defaultModule/controller/action or /module/controller/defaultAction
+                $this->module = $this->defaultModule;
+                $this->controller = $uriPathArr[0];
+                $this->action = $uriPathArr[1];
 
-                $className = 'app\\' . 'controllers\\' . CoCo::$app->controller . 'Controller';
-                if(!class_exists($className)){
-                    CoCo::$app->module = $uriPathArr[0];
-                    CoCo::$app->controller = ucfirst($uriPathArr[1]);
-                    CoCo::$app->action = CoCo::$app->defaultAction;
+                $className = $this->controllerNamespace . '\\' . ucfirst($this->controller) . 'Controller';
+                if (!class_exists($className)) {
+                    $this->module = $uriPathArr[0];
+                    $this->controller = $uriPathArr[1];
+                    $this->action = $this->defaultAction;
                 }
-            }else if(count($uriPathArr) == 3){  // request /module/controller/action
-                CoCo::$app->module = $uriPathArr[0];
-                CoCo::$app->controller = ucfirst($uriPathArr[1]);
-                CoCo::$app->action = ucfirst($uriPathArr[2]);
-            }else{  // request /module/controller/action/params0key/params0value/...
-                CoCo::$app->module = $uriPathArr[0];
-                CoCo::$app->controller = ucfirst($uriPathArr[1]);
-                CoCo::$app->action = ucfirst($uriPathArr[2]);
+            } else if (count($uriPathArr) == 3) {  // request /module/controller/action
+                $this->module = $uriPathArr[0];
+                $this->controller = $uriPathArr[1];
+                $this->action = $uriPathArr[2];
+            } else {  // request /module/controller/action/params0key/params0value/...
+                $this->module = $uriPathArr[0];
+                $this->controller = $uriPathArr[1];
+                $this->action = $uriPathArr[2];
 
                 for ($i = 3; $i < count($uriPathArr); $i += 2) {
                     if (isset($uriPathArr[($i + 1)])) {
@@ -155,42 +178,55 @@ class Application extends \coco\base\Application
      * dispatch
      * @throws Exception
      */
-    public function dispatch(){
+    public function dispatch()
+    {
+        if ($this->routeType == 1) {
+            //require_once $this->config['route']['includeRulesFile'];
+            Route::haltOnMatch();
+            Route::error(function ($route) {
+                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+                throw new Exception('Page Not Found', "This route：\"{$_SERVER['REQUEST_METHOD']}: $route\" No matching items!");
+            });
+            Route::dispatch();
+            $this->end();
+        }
+
+        $this->parseRequest();
+
         // Joining together the controller class name
-        if(CoCo::$app->module == CoCo::$app->defaultModule){
-            $className = 'app\\' . 'controllers\\' . CoCo::$app->controller . 'Controller';
-        }else{  // Joining together the controller class name
-            $className = 'app\\'  . 'controllers\\'. CoCo::$app->module.'\\' .CoCo::$app->controller . 'Controller';
+        if ($this->module == $this->defaultModule) {
+            $className = $this->controllerNamespace . '\\' . $this->controller . 'Controller';
+        } else {  // Joining together the controller class name
+            if (!empty($this->config['modules'][$this->module]['controllerNamespace'])) {
+                $className = $this->config['modules'][$this->module]['controllerNamespace'] . '\\' . ucfirst($this->controller) . 'Controller';
+            } else {
+                $className = 'app\\modules\\' . $this->module . '\\controllers\\' . ucfirst($this->controller) . 'Controller';
+            }
         }
 
         // check controller class exists
-        if(!class_exists($className)){
-            header('HTTP/1.1 404 Not Found');
-            header("status: 404 Not Found");
-            throw new Exception('Page Not Found', 'Controller '.$className .' not exists!');
+        if (!class_exists($className)) {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            throw new Exception('Page Not Found', 'Controller ' . $className . ' not exists!');
         }
 
         // Instantiate the controller
         $controllerObj = new $className();
 
-        if(!(!is_null($controllerObj) && $controllerObj instanceof Controller)){
-            header('HTTP/1.1 404 Not Found');
-            header("status: 404 Not Found");
-            throw new Exception('Page Not Found', 'Controller '.$className .' has error!');
+        if (!(!is_null($controllerObj) && $controllerObj instanceof Controller)) {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            throw new Exception('Page Not Found', 'Controller ' . $className . ' has error!');
         }
 
-        $action = 'action'.CoCo::$app->action;
+        $action = 'action' . ucfirst($this->action);
 
         // check action method exists
         if (!method_exists($controllerObj, $action)) {
-            header('HTTP/1.1 404 Not Found');
-            header("status: 404 Not Found");
-            throw new Exception('Page Not Found','Action '.get_class($controllerObj) . '::' . $action . ' not exists!');
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            throw new Exception('Page Not Found', 'Action ' . get_class($controllerObj) . '::' . $action . ' not exists!');
         }
 
-        //dump(CoCo::$app);exit;
-
-        CoCo::$app->currentController = $controllerObj;
+        $this->currentController = $controllerObj;
 
         // action
         $controllerObj->$action();
@@ -219,19 +255,21 @@ class Application extends \coco\base\Application
             }
         }
         // url suffix
-        if (!empty(CoCo::$app->config['url']['suffix'])) {
-            $url .= CoCo::$app->config['url']['suffix'];
+        if (!empty($this->config['route']['urlSuffix'])) {
+            $url .= $this->config['route']['urlSuffix'];
         }
 
         return $url;
     }
 
-    public function basePath(){
+    public function basePath()
+    {
         $path = pathinfo($_SERVER['SCRIPT_NAME']);
-        return rtrim($path['dirname'], '/').'/';
+        return rtrim($path['dirname'], '/') . '/';
     }
 
-    public function end(){
-        exit();
+    public function end()
+    {
+        exit(0);
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 namespace coco\base;
+
 /**
  * Base Application
  * User: ttt
@@ -9,4 +10,23 @@ namespace coco\base;
  */
 class Application
 {
+    public $config;
+    public $appPath;
+
+    public $timeZone = 'UTC';
+    public $charset = 'UTF-8';
+
+    public $module;
+    public $controller;
+    public $action;
+
+    public $defaultModule = 'index';
+    public $defaultController = 'index';
+    public $defaultAction = 'index';
+
+    public $controllerNamespace = 'app\\controllers';
+
+    public $currentController;
+
+    public $routeType;
 }

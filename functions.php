@@ -14,7 +14,7 @@ function echoJson($data)
 {
     header('Content-type:application/json');
     echo json_encode($data);
-    exit;
+    exit(0);
 }
 
 /**

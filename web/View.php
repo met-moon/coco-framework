@@ -11,7 +11,7 @@ namespace coco\web;
 use CoCo;
 use coco\Exception;
 
-class View extends \coco\base\View
+class View
 {
     /**
      * page title
