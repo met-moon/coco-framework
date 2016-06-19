@@ -43,7 +43,7 @@ class Controller extends \coco\base\Controller
      * @param null|string $view
      * @param array $data
      */
-    public function render($view = null, $data = [])
+    public function render($view = null, array $data = [])
     {
         $this->getView()->render($view, $data);
     }
@@ -54,7 +54,7 @@ class Controller extends \coco\base\Controller
      * @param array $data
      */
 
-    public function renderPartial($view = null, $data = [])
+    public function renderPartial($view = null, array $data = [])
     {
         $this->getView()->renderPartial($view, $data);
     }

@@ -21,7 +21,7 @@ class PDB
      * @var array
      */
     protected $config = array(
-        'dsn' => 'mysql:host=localhost;dbname=test;port=3306;charset=utf8',
+        'dsn' => 'mysql:host=localhost;dbname=tests;port=3306;charset=utf8',
         'username' => 'root',
         'password' => '',
         'charset' => 'utf8',
@@ -37,13 +37,13 @@ class PDB
      * Slave configuration
      * array(
      *      array(
-     *          'dsn' => 'mysql:host=localhost;dbname=test;port=3306;charset=utf8',
+     *          'dsn' => 'mysql:host=localhost;dbname=tests;port=3306;charset=utf8',
      *          'username' => 'user1',
      *          'password' => 'pwd1',
      *          ...
      *      ),
      *      array(
-     *          'dsn' => 'mysql:host=localhost;dbname=test;port=3306;charset=utf8',
+     *          'dsn' => 'mysql:host=localhost;dbname=tests;port=3306;charset=utf8',
      *          'username' => 'user2',
      *          'password' => 'pwd2',
      *          ...
