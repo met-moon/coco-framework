@@ -195,7 +195,7 @@ class Application extends \coco\base\Application
 
         // Joining together the controller class name
         if ($this->module == $this->defaultModule) {
-            $className = $this->controllerNamespace . '\\' . $this->controller . 'Controller';
+            $className = $this->controllerNamespace . '\\' . ucfirst($this->controller) . 'Controller';
         } else {  // Joining together the controller class name
             if (!empty($this->config['modules'][$this->module]['controllerNamespace'])) {
                 $className = $this->config['modules'][$this->module]['controllerNamespace'] . '\\' . ucfirst($this->controller) . 'Controller';
