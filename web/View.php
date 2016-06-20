@@ -242,6 +242,6 @@ class View
      */
     protected function includeFile($file)
     {
-        return include $file;
+        include $file;
     }
 }
