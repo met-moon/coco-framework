@@ -97,7 +97,7 @@ class View
                     }
                 } else {
                     ob_start();
-                    $this->includeFile($viewFile);
+                    include $viewFile;
                     $content = ob_get_contents();
                     ob_end_clean();
                     $viewData['content'] = $content;
@@ -122,7 +122,7 @@ class View
 
         try {
             if (file_exists($viewFile)) {
-                $this->includeFile($viewFile);
+                include $viewFile;
             } else {
                 header('HTTP/1.1 500 Internal Server Error');
                 throw new Exception('View Not Found', 'View ' . $viewFile . ' not exists!' . PHP_EOL);
@@ -233,15 +233,5 @@ class View
     {
         $basePath = CoCo::$app->basePath();
         return rtrim($basePath, '/');
-    }
-
-    /**
-     * include file
-     * @param string $file
-     * @return mixed
-     */
-    protected function includeFile($file)
-    {
-        include $file;
     }
 }
