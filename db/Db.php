@@ -13,23 +13,12 @@ use PDO;
  */
 class Db extends Connection
 {
-    public function __construct(array $config = [], array $slave = [])
+    //public function __construct(array $config = [], array $slave = [])
+    public function __construct(array $config)
     {
-        if (empty($config)) {
-            $dbConfig = $this->getDbConfig();
-            $config = $dbConfig['master'];
-            $slave = isset($dbConfig['slave']) ? $dbConfig['slave'] : [];
-        }
-        parent::__construct($config, $slave);
-    }
-
-    /**
-     * get db config
-     * @return array
-     */
-    public function getDbConfig()
-    {
-        return CoCo::$app->config['db'];
+        $master = $config['master'];
+        $slaves = isset($config['slaves']) ? $config['slaves'] : [];
+        parent::__construct($master, $slaves);
     }
 
     /**
@@ -115,7 +104,7 @@ class Db extends Connection
             $bindFields[] = '?';
             $values[] = $value;
         }
-        $sql = "INSERT INTO " . $tableName . "(" . implode($fields, ",") . ") VALUES(" . implode($bindFields, ",") . ")";
+        $sql = 'INSERT INTO ' . $tableName . '(' . implode($fields, ',') . ') VALUES(' . implode($bindFields, ',') . ')';
 
         $affectedRows = $this->execute($sql, $values);
         if ($affectedRows) {
@@ -172,8 +161,8 @@ class Db extends Connection
             $bindParams = $bindSetParams;
         }
 
-        $sql = "UPDATE {$tableName} SET " . implode($fields, ',');
-        $sql .= " WHERE " . $where;
+        $sql = 'UPDATE ' . $tableName . ' SET ' . implode($fields, ',');
+        $sql .= ' WHERE ' . $where;
 
         return $this->execute($sql, $bindParams);
     }

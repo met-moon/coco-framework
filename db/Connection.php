@@ -57,11 +57,11 @@ class Connection
      */
     protected $slaveConfig = [];
 
-    public function __construct(array $config, $slave = [])
+    public function __construct(array $config, $slaves = [])
     {
         //$this->config = $this->complete_config($this->config, $config);
         $this->config = array_replace_recursive($this->config, $config);
-        $this->slaveConfig = $slave;
+        $this->slaveConfig = $slaves;
     }
 
     /**
