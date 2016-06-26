@@ -28,14 +28,29 @@ class Table
     protected $tableName;
 
     /**
-     * @var string table's primary key
+     * @var string the table's alias
+     */
+    protected $alias;
+
+    /**
+     * @var string the table's primary key
      */
     protected $primaryKey;
 
     /**
      * @var string fields in select query
      */
-    protected $fields;
+    protected $fields = '*';
+
+    /**
+     * @var array join
+     */
+    protected $join = [];
+
+    /**
+     * @var array union
+     */
+    protected $union = [];
 
     /**
      * @var string where conditions
@@ -58,7 +73,12 @@ class Table
     protected $group;
 
     /**
-     * @var int limit
+     * @var string having
+     */
+    protected $having;
+
+    /**
+     * @var int|string limit
      */
     protected $limit;
 
@@ -143,6 +163,39 @@ class Table
     }
 
     /**
+     * An alias for the table
+     * @param string $alias
+     * @return $this
+     */
+    public function alias($alias)
+    {
+        $this->alias = $alias;
+        return $this;
+    }
+
+    /**
+     * add join
+     * @param string $join
+     * @return $this
+     */
+    public function join($join)
+    {
+        $this->join[] = $join;
+        return $this;
+    }
+
+    /**
+     * add union
+     * @param string $union
+     * @return $this
+     */
+    public function union($union)
+    {
+        $this->union[] = $union;
+        return $this;
+    }
+
+    /**
      * where condition
      * @param string $where
      * @param array $bindParams
@@ -157,7 +210,7 @@ class Table
 
     /**
      * limit
-     * @param int $limit
+     * @param int|string $limit
      * @return $this
      */
     public function limit($limit)
@@ -189,6 +242,17 @@ class Table
     }
 
     /**
+     * having
+     * @param string $having
+     * @return $this
+     */
+    public function having($having)
+    {
+        $this->having = $having;
+        return $this;
+    }
+
+    /**
      * order by
      * @param string $order
      * @return $this
@@ -213,12 +277,31 @@ class Table
 
         $sql .= ' FROM ' . $this->tableName;
 
+        if (!empty($this->alias)) {
+            $sql .= ' AS ' . $this->alias;
+        }
+
+        if (!empty($this->join)) {
+            $joinStr = implode(' ', $this->join);
+            $sql .= ' ' . $joinStr;
+        }
+
+        if (!empty($this->union)) {
+            $sql .= ' UNION';
+            $unionStr = implode(' UNION ', $this->union);
+            $sql .= ' ' . $unionStr;
+        }
+
         if (!empty($this->where)) {
             $sql .= ' WHERE ' . $this->where;
         }
 
         if (!empty($this->group)) {
             $sql .= ' GROUP BY ' . $this->group;
+
+            if (!empty($this->having)) {
+                $sql .= ' HAVING ' . $this->having;
+            }
         }
 
         if (!empty($this->order)) {
@@ -242,9 +325,12 @@ class Table
     protected function resetAttr()
     {
         $this->fields = null;
+        $this->alias = null;
+        $this->join = [];
         $this->where = null;
         $this->bindParams = [];
         $this->group = null;
+        $this->having = null;
         $this->order = null;
         $this->limit = null;
         $this->offset = null;
@@ -274,5 +360,20 @@ class Table
         $res = $this->db->fetch($sql, $this->bindParams, $fetchStyle);
         $this->resetAttr();
         return $res;
+    }
+
+    /**
+     * scalar
+     * @return mixed
+     */
+    public function scalar()
+    {
+        $res = $this->fetch(PDO::FETCH_NUM);
+        if ($res !== false) {
+            if (isset($res[0])) {
+                return $res[0];
+            }
+        }
+        return false;
     }
 }
