@@ -20,11 +20,6 @@ class Table
     /**
      * @var string
      */
-    protected $dbName;
-
-    /**
-     * @var string
-     */
     protected $tableName;
 
     /**
@@ -89,15 +84,35 @@ class Table
 
     /**
      * Table constructor.
+     * @param string $tableName
      * @param null|Db $db
      */
-    public function __construct(Db $db = null)
+    public function __construct($tableName = null, Db $db = null)
     {
         if (is_null($db)) {
             $this->db = CoCo::$app->db;
         } else {
             $this->db = $db;
         }
+
+        if (!is_null($tableName)) {
+            $this->tableName = $tableName;
+        }
+    }
+
+
+    /**
+     * get table's primary key if exists
+     * @return string|bool false
+     */
+    public function getPrimaryKey()
+    {
+        if (is_null($this->primaryKey)) {
+            $row = $this->getDb()->fetch("SHOW KEYS FROM $this->tableName WHERE `Key_name`='PRIMARY'");
+            $this->primaryKey = $row['Column_name'];
+        }
+
+        return $this->primaryKey;
     }
 
     /**
@@ -364,11 +379,17 @@ class Table
 
     /**
      * scalar
+     * @param string|null $column
      * @return mixed
      */
-    public function scalar()
+    public function scalar($column = null)
     {
-        $res = $this->fetch(PDO::FETCH_NUM);
+        if (!is_null($column)) {
+            $res = $this->select($column)->limit(1)->fetch(PDO::FETCH_NUM);
+        } else {
+            $res = $this->limit(1)->fetch(PDO::FETCH_NUM);
+        }
+
         if ($res !== false) {
             if (isset($res[0])) {
                 return $res[0];

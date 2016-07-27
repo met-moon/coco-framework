@@ -166,4 +166,14 @@ class Db extends Connection
 
         return $this->execute($sql, $bindParams);
     }
+
+    /**
+     * from table
+     * @param string $tableName
+     * @return Table
+     */
+    public function from($tableName)
+    {
+        return new Table($tableName, $this);
+    }
 }
