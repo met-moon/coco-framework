@@ -2,7 +2,8 @@
 
 namespace coco\web;
 
-use coco\Exception;
+use CoCo;
+use ClassLoader;
 
 /**
  * Web Application
