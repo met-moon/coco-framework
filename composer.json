@@ -16,6 +16,6 @@
 	},
 	"autoload": {
 		"psr-4": {"coco\\": ""},
-		"classmap": ["./CoCo.php"]
+		"classmap": ["CoCo.php"]
 	}
 }
