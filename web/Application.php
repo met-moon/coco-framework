@@ -3,8 +3,7 @@
 namespace coco\web;
 
 use CoCo;
-use ClassLoader;
-
+use coco\Exception;
 /**
  * Web Application
  * User: ttt
