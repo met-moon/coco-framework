@@ -4,7 +4,7 @@ namespace coco\base;
 
 /**
  * Base Application
- * @property \coco\db\Db $db The database connection. This property is read-only.
+ * @property \coco\db\Connection $db The database connection. This property is read-only.
  * User: ttt
  * Date: 2015/11/21
  * Time: 22:10
@@ -37,7 +37,13 @@ class Application
             $className = $this->config['components'][$name]['class'];
             $params = $this->config['components'][$name];
             unset($params['class']);
-            return $this->$name = new $className($params);
+            $this->$name = new $className();
+            if(!empty($params)){
+                foreach($params as $attribute => $value){
+                    $this->$name->$attribute = $value;
+                }
+            }
+            return $this->$name;
         }
     }
 }

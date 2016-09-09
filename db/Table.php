@@ -13,7 +13,7 @@ use CoCo;
 class Table
 {
     /**
-     * @var Db|null
+     * @var Connection|null
      */
     protected $db;
 
@@ -85,9 +85,9 @@ class Table
     /**
      * Table constructor.
      * @param string $tableName
-     * @param null|Db $db
+     * @param null|Connection $db
      */
-    public function __construct($tableName = null, Db $db = null)
+    public function __construct($tableName = null, Connection $db = null)
     {
         if (is_null($db)) {
             $this->db = CoCo::$app->db;
@@ -117,7 +117,7 @@ class Table
 
     /**
      * get Db instance
-     * @return Db|null
+     * @return Connection|null
      */
     public function getDb()
     {

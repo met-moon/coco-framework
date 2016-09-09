@@ -14,39 +14,32 @@ class Connection
 {
     protected $pdo;
     protected $readPdo;
-    protected $transactions = 0;
 
+    protected $transactions = 0;
     protected $lastSql;
     protected $lastParams;
 
-    /**
-     * Master configuration
-     * @var array
-     */
-    protected $config = [
-        'dsn' => 'mysql:host=localhost;dbname=test;port=3306;charset=utf8',
-        'username' => 'root',
-        'password' => '',
-        'charset' => 'utf8',
-        'tablePrefix' => '',
-        'emulatePrepares' => false,
-        'options' => [
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-        ]
+    public $dsn = 'mysql:host=localhost;dbname=test';
+    public $username = 'root';
+    public $password = '';
+    public $charset = 'utf8';
+    public $tablePrefix = '';
+    public $emulatePrepares = false;
+    public $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ];
 
     /**
      * Slave configuration
      * [
      *      [
-     *          'dsn' => 'mysql:host=localhost;dbname=test;port=3306;charset=utf8',
+     *          'dsn' => 'mysql:host=localhost;dbname=test;port=3306',
      *          'username' => 'user1',
      *          'password' => 'pwd1',
      *          ...
      *      ],
      *      [
-     *          'dsn' => 'mysql:host=localhost;dbname=test;port=3306;charset=utf8',
+     *          'dsn' => 'mysql:host=localhost;dbname=test;port=3306',
      *          'username' => 'user2',
      *          'password' => 'pwd2',
      *          ...
@@ -55,14 +48,7 @@ class Connection
      * ]
      * @var array
      */
-    protected $slaveConfig = [];
-
-    public function __construct(array $config, $slaves = [])
-    {
-        //$this->config = $this->complete_config($this->config, $config);
-        $this->config = array_replace_recursive($this->config, $config);
-        $this->slaveConfig = $slaves;
-    }
+    public $slaves = [];
 
     /**
      * return a master database PDO instance (insert, delete, update)
@@ -73,8 +59,14 @@ class Connection
         if ($this->pdo instanceof PDO) {
             return $this->pdo;
         }
-
-        $this->pdo = $this->makePdo($this->config);
+        $config = [
+            'dsn'=>$this->dsn,
+            'username'=>$this->username,
+            'password'=>$this->password,
+            'options'=>$this->options,
+            'emulatePrepares'=>$this->emulatePrepares,
+        ];
+        $this->pdo = $this->makePdo($config);
         return $this->pdo;
     }
 
@@ -87,16 +79,17 @@ class Connection
     {
         $pdo = new PDO($config['dsn'], $config['username'], $config['password'], $config['options']);
 
-        //false表示不使用PHP本地模拟prepare
         if (constant('PDO::ATTR_EMULATE_PREPARES')) {
             $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, $config['emulatePrepares']);
         }
+
+        $pdo->exec("SET NAMES {$this->charset}");
 
         return $pdo;
     }
 
     /**
-     * 返回用于查询的PDO对象 (如果在事务中，将自动调用getPdo()以确保整个事务均使用主库)
+     * return a PDO instance for query read (If in the transaction will use method getPdo() to use master db)
      * @return PDO
      */
     public function getReadPdo()
@@ -104,37 +97,37 @@ class Connection
         if ($this->transactions >= 1) {
             return $this->getPdo();
         }
-
         if ($this->readPdo instanceof PDO) {
             return $this->readPdo;
         }
-
-        if (!is_array($this->slaveConfig) || count($this->slaveConfig) == 0) {
+        if (!is_array($this->slaves) || count($this->slaves) == 0) {
             return $this->getPdo();
         }
 
-        $slaveDbConfig = $this->slaveConfig;
+        $slaveDbConfig = $this->slaves;
         shuffle($slaveDbConfig);
         do {
-            // 取出一个打乱后的从库信息
             $config = array_shift($slaveDbConfig);
-
-            // 使用主库信息补全从库配置
-            //$config = $this->complete_config($this->config, $config);
-            $config = array_replace_recursive($this->config, $config);
 
             try {
                 $this->readPdo = $this->makePdo($config);
                 return $this->readPdo;
-            } catch (PDOException $ex) {
-                //
-                //echo $ex->getMessage();
+            } catch (PDOException $e) {
+                //pass
+                //echo $e->getMessage();
             }
-
         } while (count($slaveDbConfig) > 0);
 
-        // 没有可用的从库，直接使用主库
         return $this->readPdo = $this->getPdo();
+    }
+
+    /**
+     * disconnect
+     */
+    public function disconnect()
+    {
+        $this->pdo = null;
+        $this->readPdo = null;
     }
 
     /**
@@ -146,10 +139,8 @@ class Connection
     public function query($sql, array $bindParams = [])
     {
         $sql = $this->quoteSql($sql);
-
         $this->lastSql = $sql;
         $this->lastParams = $bindParams;
-
         $statement = $this->getReadPdo()->prepare($sql);
         $statement->execute($bindParams);
         return $statement;
@@ -174,6 +165,49 @@ class Connection
     }
 
     /**
+     * get last insert id
+     * PDO::lastInsertId
+     * @param null $sequence
+     * @return int|string
+     */
+    public function getLastInsertId($sequence = null)
+    {
+        return $this->getPdo()->lastInsertId($sequence);
+    }
+
+    /**
+     * begin transaction
+     */
+    public function beginTransaction()
+    {
+        ++$this->transactions;
+        if ($this->transactions == 1) {
+            $this->getPdo()->beginTransaction();
+        }
+    }
+    /**
+     * commit transaction
+     */
+    public function commit()
+    {
+        if ($this->transactions == 1) $this->getPdo()->commit();
+        --$this->transactions;
+    }
+
+    /**
+     * rollBack transaction
+     */
+    public function rollBack()
+    {
+        if ($this->transactions == 1) {
+            $this->transactions = 0;
+            $this->getPdo()->rollBack();
+        } else {
+            --$this->transactions;
+        }
+    }
+
+    /**
      * @param string $sql
      * @return string
      */
@@ -184,65 +218,11 @@ class Connection
             if (!empty($matches[0])) {
                 foreach ($matches[0] as $val) {
                     $table = trim($val, "{{}}");
-                    $sql = preg_replace("/$val/", '`' . $this->getTablePrefix() . $table . '`', $sql, 1);
+                    $sql = preg_replace("/$val/", '`' . $this->tablePrefix . $table . '`', $sql, 1);
                 }
             }
         }
         return $sql;
-    }
-
-    /**
-     * 返回最后插入行的ID或序列值
-     * PDO::lastInsertId
-     * @param null $sequence 序列名称
-     * @return int|string
-     */
-    public function getLastInsertId($sequence = null)
-    {
-        return $this->getPdo()->lastInsertId($sequence);
-    }
-
-    /**
-     * 开启事务
-     */
-    public function beginTransaction()
-    {
-        ++$this->transactions;
-        if ($this->transactions == 1) {
-            $this->getPdo()->beginTransaction();
-        }
-    }
-
-    /**
-     * 提交事务
-     */
-    public function commit()
-    {
-        if ($this->transactions == 1) $this->getPdo()->commit();
-        --$this->transactions;
-    }
-
-    /**
-     * 回滚事务
-     */
-    public function rollBack()
-    {
-        if ($this->transactions == 1) {
-            $this->transactions = 0;
-
-            $this->getPdo()->rollBack();
-        } else {
-            --$this->transactions;
-        }
-    }
-
-    /**
-     * 断开数据库链接
-     */
-    public function disconnect()
-    {
-        $this->pdo = null;
-        $this->readPdo = null;
     }
 
     /**
@@ -264,33 +244,168 @@ class Connection
     }
 
     /**
-     * 返回表前缀
-     * @return string
+     * fetch all rows
+     * @param string $sql
+     * @param array $bindParams
+     * @param int $fetchStyle
+     * @return array|bool|mixed
      */
-    protected function getTablePrefix()
+    public function fetchAll($sql, array $bindParams = [], $fetchStyle = PDO::FETCH_ASSOC)
     {
-        return $this->config['tablePrefix'];
+        $statement = $this->query($sql, $bindParams);
+        if ($statement) {
+            $args = func_get_args();
+            $args = array_slice($args, 2);
+            $args[0] = $fetchStyle;
+            if ($fetchStyle == PDO::FETCH_FUNC) {
+                return call_user_func_array([$statement, 'fetchAll'], $args);
+            }
+            call_user_func_array([$statement, 'setFetchMode'], $args);
+            return $statement->fetchAll();
+        }
+        return false;
     }
 
     /**
-     * complete configuration
-     *  if (PHP 5 >= 5.3.0, PHP 7) replace it with function array_replace_recursive
-     * @param array $base
-     * @param array $new
-     * @return array
+     * fetch first row
+     * @param string $sql
+     * @param array $bindParams
+     * @param int $fetchStyle
+     * @return array|bool false|mixed
      */
-    protected function complete_config(array $base, array $new)
+    public function fetch($sql, array $bindParams = [], $fetchStyle = PDO::FETCH_ASSOC)
     {
-        foreach ($new as $k => $v) {
-            if (is_array($v)) {
-                foreach ($v as $kk => $vv) {
-                    $base[$k][$kk] = $vv;
-                }
-            } else {
-                $base[$k] = $v;
+        $statement = $this->query($sql, $bindParams);
+        if ($statement) {
+            $args = func_get_args();
+            $args = array_slice($args, 2);
+            $args[0] = $fetchStyle;
+            if ($fetchStyle == PDO::FETCH_FUNC) {
+                return call_user_func_array([$statement, 'fetchAll'], $args);
             }
+            call_user_func_array([$statement, 'setFetchMode'], $args);
+            return $statement->fetch();
         }
-        return $base;
+        return false;
     }
 
+    /**
+     * Returns a scalar like: COUNT、AVG、MAX、MIN
+     * @param string $sql
+     * @param array $bindParams
+     * @return bool false | mixed
+     */
+    public function scalar($sql, array $bindParams = [])
+    {
+        $statement = $this->query($sql, $bindParams);
+        if ($statement && ($data = $statement->fetch(PDO::FETCH_NUM)) !== false) {
+            if (isset($data[0])) {
+                return $data[0];
+            }
+        }
+        return false;
+    }
+
+    /**
+     * insert
+     * @param $tableName
+     * @param array $insertData
+     * @return bool false|int lastInsertId
+     */
+    public function insert($tableName, array $insertData = [])
+    {
+        if (empty($insertData)) {
+            return false;
+        }
+
+        $fields = [];
+        $bindFields = [];
+        $values = [];
+        foreach ($insertData as $key => $value) {
+            $fields[] = $key;
+            $bindFields[] = '?';
+            $values[] = $value;
+        }
+        $sql = 'INSERT INTO ' . $tableName . '(' . implode($fields, ',') . ') VALUES(' . implode($bindFields, ',') . ')';
+
+        $affectedRows = $this->execute($sql, $values);
+        if ($affectedRows) {
+            return $this->getLastInsertId();
+        }
+        return false;
+    }
+
+    /**
+     * delete
+     * @param string $tableName
+     * @param string $where
+     * @param array $bindParams
+     * @return bool false|int affected rows
+     */
+    public function delete($tableName, $where = '', $bindParams = [])
+    {
+        $sql = 'DELETE FROM ' . $tableName . ' WHERE ' . $where;
+        return $this->execute($sql, $bindParams);
+    }
+
+    /**
+     * update
+     * @param string $tableName
+     * @param array $setData
+     * @param string $where
+     * @param array $bindParams
+     * @return bool false|int affected rows
+     */
+    public function update($tableName, $setData, $where = '', $bindParams = [])
+    {
+        if (empty($setData)) {
+            return false;
+        }
+
+        $fields = [];
+        if (self::is_assoc($bindParams)) { // bind params using :
+            $time = time();
+            foreach ($setData as $key => $value) {
+                $fields[] = "`$key`=:{$key}_set_" . $time;
+                $bindParams[":{$key}_set_{$time}"] = $value;
+            }
+        } else {  // bind params using ?
+            $bindSetParams = [];
+            foreach ($setData as $key => $value) {
+                $fields[] = "`$key`=?";
+                $bindSetParams[] = $value;
+            }
+            if (!empty($bindParams)) {
+                foreach ($bindParams as $v) {
+                    $bindSetParams[] = $v;
+                }
+            }
+            $bindParams = $bindSetParams;
+        }
+
+        $sql = 'UPDATE ' . $tableName . ' SET ' . implode($fields, ',');
+        $sql .= ' WHERE ' . $where;
+
+        return $this->execute($sql, $bindParams);
+    }
+
+    /**
+     * from table
+     * @param string $tableName
+     * @return Table
+     */
+    public function from($tableName)
+    {
+        return new Table($tableName, $this);
+    }
+
+    /**
+     * Check if it is an associative array
+     * @param array $array
+     * @return bool
+     */
+    protected static function is_assoc(array $array)
+    {
+        return array_keys($array) !== range(0, count($array) - 1);
+    }
 }
