@@ -1,4 +1,10 @@
 <?php
+namespace coco;
+
+/**
+ * Class CoCo
+ * @package coco
+ */
 class CoCo
 {
     /**
@@ -8,7 +14,7 @@ class CoCo
 
     public static function getVersion()
     {
-        return 'v0.3-dev';
+        return 'v0.4';
     }
 
     public static function init(){
@@ -19,7 +25,13 @@ class CoCo
         defined('COCO_DEBUG') or define('COCO_DEBUG', false);
 
         // default environment is production
-        defined('COCO_ENV') or define('COCO_ENV', 'pro');
+        //  dev | test | prod
+        /**
+         * application environment
+         * default environment is production(prod)
+         * dev | test | prod
+         */
+        defined('COCO_ENV') or define('COCO_ENV', 'prod');
     }
 }
 

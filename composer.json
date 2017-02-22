@@ -15,7 +15,6 @@
 		"php": ">=5.4.0"
 	},
 	"autoload": {
-		"psr-4": {"coco\\": ""},
-		"classmap": ["CoCo.php"]
+		"psr-4": {"coco\\": ""}
 	}
 }

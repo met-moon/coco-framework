@@ -7,8 +7,7 @@
  * Time: 14:12
  */
 
-require_once 'CoCo.php';
 require_once 'ClassLoader.php';
 
-ClassLoader::addPrefix('coco\\', __DIR__);
-spl_autoload_register('ClassLoader::autoload', true, true);
+\coco\ClassLoader::addPrefix('coco\\', __DIR__);
+spl_autoload_register('coco\ClassLoader::autoload', true, true);
