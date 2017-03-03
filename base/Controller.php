@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Created by PhpStorm.
+ * Base Controller
  * User: ttt
  * Date: 2015/11/21
  * Time: 20:17

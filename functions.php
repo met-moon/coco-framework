@@ -6,44 +6,29 @@
  * Time: 17:58
  */
 
-/**
- * echo json_encode data and exit
- * @param array $data
- */
-function echoJson(array $data)
-{
-    header('Content-type:application/json');
-    echo json_encode($data);
-    exit(0);
-}
-
-/**
- * pretty var_dump()
- * @param mixed $var
- */
-function dump($var)
-{
-    $argc = func_num_args();
-
-    if ($argc > 1) {
-        echo '<pre >';
-        for ($i = 0; $i < $argc; $i++) {
-            var_dump(func_get_arg($i));
-        }
-        echo '</pre>';
-    } else {
+if (!function_exists('dump')) {
+    /**
+     * pretty var_dump()
+     * @param mixed $var
+     */
+    function dump($var)
+    {
         echo '<pre>';
-        var_dump($var);
+        foreach (func_get_args() as $var) {
+            var_dump($var);
+        }
         echo '</pre>';
     }
 }
 
-/**
- * Check if it is an associative array
- * @param array $array
- * @return bool
- */
-function is_assoc(array $array)
-{
-    return array_keys($array) !== range(0, count($array) - 1);
+if (!function_exists('is_assoc')) {
+    /**
+     * Check if it is an associative array
+     * @param array $array
+     * @return bool
+     */
+    function is_assoc(array $array)
+    {
+        return array_keys($array) !== range(0, count($array) - 1);
+    }
 }

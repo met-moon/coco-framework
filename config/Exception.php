@@ -2,14 +2,14 @@
 /**
  * Created by PhpStorm.
  * User: ttt
- * Date: 2016/6/21
+ * Date: 2017/2/14
  * Time: 10:32
  */
 
-namespace coco\base;
+namespace coco\config;
 
 
-class ErrorHandler
+class Exception extends \Exception
 {
-    
+
 }

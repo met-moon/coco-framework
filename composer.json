@@ -6,15 +6,21 @@
     "license": "MIT",
     "authors": [
 		{
-			"name": "xiaozuzhi",
+			"name": "heropoo",
 			"email": "aiyouyou1000@163.com",
 			"role": "Founder and project lead"
 		}
 	],
 	"require": {
-		"php": ">=5.4.0"
+		"php": ">=5.4.0",
+		"symfony/http-foundation": "^3.2",
+		"twig/twig": "^1.31"
 	},
 	"autoload": {
-		"psr-4": {"coco\\": ""}
+		"psr-4": {"coco\\": ""},
+		"files":[
+			"config/helpers.php",
+			"functions.php"
+		]
 	}
 }
