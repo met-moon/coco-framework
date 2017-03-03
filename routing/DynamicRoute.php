@@ -75,13 +75,14 @@ class DynamicRoute
      */
     protected function handlerRequest(){
 
-        if(empty($this->controllerClassName)){
+        if(empty($this->controllerClassName) || !class_exists($this->controllerClassName)){
             //echo '404';
             return Response::create("404 not found", 404);
         }
-        $actionName = $this->action.'Action';
 
         $controllerObj = new $this->controllerClassName;
+
+        $actionName = $this->action.'Action';
 
         if(!method_exists($controllerObj, $actionName)){
             //echo '404';
