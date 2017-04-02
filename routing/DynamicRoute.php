@@ -123,8 +123,8 @@ class DynamicRoute
                     $this->action = isset($uriPathArr[1]) ? $uriPathArr[1] : $this->defaultAction;
                 } else {
                     $moduleName = $uriPathArr[0];
-                    if (isset($this->modulesConfig[$moduleName])) {   //module
-                        $moduleConfig = $this->modulesConfig[$moduleName];
+                    if (in_array($moduleName, $this->modulesConfig) || isset($this->modulesConfig[$moduleName])) {   //module
+                        $moduleConfig = isset($this->modulesConfig[$moduleName]) ? $this->modulesConfig[$moduleName] : [];
                         if (isset($moduleConfig['controllerNamespace'])) {
                             $className = $moduleConfig['controllerNamespace'];
                         } else {
