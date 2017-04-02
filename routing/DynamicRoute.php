@@ -102,10 +102,13 @@ class DynamicRoute
         $this->method = $request->getMethod();
         $this->uri = $request->getPathInfo();
 
-        $uri = trim($this->uri, '/').'/';
+        $uri = $this->uri;
+
         if (!empty($this->urlSuffix) && strstr($uri, $this->urlSuffix) === $this->urlSuffix) {
-            $uri = strstr($this->uri, $this->urlSuffix, true);
+            $uri = strstr($uri, $this->urlSuffix, true);
         }
+
+        $uri = trim($uri, '/').'/';
 
         if ($uri === '/') {
             $this->controllerClassName = $this->controllerNamespace . '\\' . ucfirst($this->defaultController) . 'Controller';
